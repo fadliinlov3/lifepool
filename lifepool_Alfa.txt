@@ -1,23 +1,27 @@
 // MAIN CODE
-// lifepool_v2
+// lifepool_v3
 
-// Penambahan LCD untuk memonitoring ketinggian air sumur
+// Penambahan fitur button untuk memonitoring ketinggian air sumur dan juga ketinggi air kolam
 
 #include <Adafruit_LiquidCrystal.h>
 
-// variabel untuk lcd sumur
+// variabel untuk lcd
 Adafruit_LiquidCrystal lcd(0);
-
+const short btnLcd = 11;
+const short ledBtn = 12;
+short statusLcd = 0;
 
 
 //variabel untuk sensor
 const short trigger1=2; 
 const short echo1=3; 
-int waktu1, jarak1;
+int waktu1;
 
 const short trigger2=4; 
 const short echo2=5; 
-int waktu2, jarak2;
+int waktu2;
+
+int jarak[2];
 
 //variabel untuk led
 const short ledSum1 = 6;
@@ -69,11 +73,15 @@ void setup(){
   // setup lcd
   lcd.begin(16, 2);
   // lcdKol.begin(16, 2);
-  lcd.print("H Sumur: ");
+  // lcd.print("H Sumur: ");
   // lcdKol.print("H Kolam: ");
   lcd.createChar(0, water);
   // lcdKol.createChar(0, water);
   lcd.createChar(1, waterLevel);
+  
+  // setup button
+  pinMode(btnLcd, INPUT);
+  pinMode(ledBtn, OUTPUT);
 }
 
 void loop(){
@@ -84,14 +92,14 @@ void loop(){
   delayMicroseconds(10);      
   digitalWrite(trigger1,LOW); 
   waktu1 = pulseIn(echo1,HIGH);
-  jarak1 = waktu1 * 0.034 / 2;
+  jarak[0] = waktu1 * 0.034 / 2;
   
   // Serial.print ("Jarak = ");
   // Serial.print (jarak1);     
   // Serial.print (" cm");       
   
   // pengecekan konsisi air sumur
-  if(jarak1 >= 200){
+  if(jarak[0] >= 200){
   	digitalWrite(ledSum1, HIGH);
     digitalWrite(ledSum2, LOW);
   } else{
@@ -99,29 +107,79 @@ void loop(){
     digitalWrite(ledSum2, HIGH);
   }
 
+
+  // pengecekan kedalaman kolam
+  digitalWrite(trigger2,LOW);
+  delayMicroseconds(5);        
+  digitalWrite(trigger2,HIGH);  
+  delayMicroseconds(10);      
+  digitalWrite(trigger2,LOW); 
+  waktu2 = pulseIn(echo2,HIGH);
+  jarak[1] = waktu2 * 0.034 / 2;
+  
+  // Serial.print ("Jarak = ");
+  // Serial.print (jarak2);     
+  // Serial.print (" cm");
+
+  // pengecekan konsisi air sumur
+  if(jarak[1] >= 200){
+  	digitalWrite(ledKol1, HIGH);
+    digitalWrite(ledKol2, LOW);
+    digitalWrite(ledKol3, LOW);
+  } else if(jarak[1] >= 80){
+   	digitalWrite(ledKol1, LOW);
+    digitalWrite(ledKol2, LOW);
+    digitalWrite(ledKol3, HIGH);
+  } else{
+   	digitalWrite(ledKol1, LOW);
+    digitalWrite(ledKol2, HIGH);
+    digitalWrite(ledKol3, LOW);
+  }
+  
+
+
+  // pembacaan nilai button
+  // tekan lama untuk mengubah nilainya
+  if (digitalRead(btnLcd) == HIGH){
+    if (statusLcd == 0) {
+      statusLcd = 1;
+      digitalWrite(ledBtn, HIGH);
+    } else {                       
+      statusLcd = 0;
+      digitalWrite(ledBtn, LOW);
+    }
+  }
+  
+  
+  
   // menampilkan ketinggian sumur
-  // lcd.clear();
+  if(statusLcd == 0){
+    lcd.setCursor(0, 0);
+    lcd.print("h.Sumur: ");
+  } else{
+    lcd.setCursor(0, 0);
+    lcd.print("h.Kolam: ");
+  }
   lcd.setCursor(10, 0);
-  lcd.print(String(jarak1));
-  // lcd.setCursor(14, 0);
+  lcd.print(String(jarak[statusLcd]));
   lcd.print(" cm ");
   lcd.setCursor(0, 1);
   lcd.write(byte(0));
   lcd.setCursor(12, 1);
-  lcd.print("FULL");
+  lcd.print("full");
   
   // perulangan untuk menampilkan level air
-  if(jarak1 >= 270){
+  if(jarak[statusLcd] >= 270){
     lcd.setCursor(2, 1);
     lcd.write(byte(1));
     lcd.print("        ");
-  } else if(jarak1 >= 240){
+  } else if(jarak[statusLcd] >= 240){
     lcd.setCursor(2, 1);
     lcd.write(byte(1));
     lcd.setCursor(3, 1);
     lcd.write(byte(1));
-    lcd.print("      ");
-  } else if(jarak1 >= 210){
+    lcd.print("       ");
+  } else if(jarak[statusLcd] >= 210){
     lcd.setCursor(2, 1);
     lcd.write(byte(1));
     lcd.setCursor(3, 1);
@@ -129,7 +187,7 @@ void loop(){
     lcd.setCursor(4, 1);
     lcd.write(byte(1));
     lcd.print("     ");
-  } else if(jarak1 >= 180){
+  } else if(jarak[statusLcd] >= 180){
     lcd.setCursor(2, 1);
     lcd.write(byte(1));
     lcd.setCursor(3, 1);
@@ -139,7 +197,7 @@ void loop(){
     lcd.setCursor(5, 1);
     lcd.write(byte(1));
     lcd.print("     ");
-  } else if(jarak1 >= 150){
+  } else if(jarak[statusLcd] >= 150){
     lcd.setCursor(2, 1);
     lcd.write(byte(1));
     lcd.setCursor(3, 1);
@@ -151,7 +209,7 @@ void loop(){
     lcd.setCursor(6, 1);
     lcd.write(byte(1));
     lcd.print("    ");
-  } else if(jarak1 >= 120){
+  } else if(jarak[statusLcd] >= 120){
     lcd.setCursor(2, 1);
     lcd.write(byte(1));
     lcd.setCursor(3, 1);
@@ -165,7 +223,7 @@ void loop(){
     lcd.setCursor(7, 1);
     lcd.write(byte(1));
     lcd.print("   ");
-  } else if(jarak1 >= 90){
+  } else if(jarak[statusLcd] >= 90){
     lcd.setCursor(2, 1);
     lcd.write(byte(1));
     lcd.setCursor(3, 1);
@@ -181,7 +239,7 @@ void loop(){
     lcd.setCursor(8, 1);
     lcd.write(byte(1));
     lcd.print("   ");
-  } else if(jarak1 >= 60){
+  } else if(jarak[statusLcd] >= 60){
     lcd.setCursor(2, 1);
     lcd.write(byte(1));
     lcd.setCursor(3, 1);
@@ -221,37 +279,8 @@ void loop(){
     lcd.print(" ");
   }
                  
-                 
+ 
   
-  // pengecekan kedalaman kolam
-  digitalWrite(trigger2,LOW);
-  delayMicroseconds(5);        
-  digitalWrite(trigger2,HIGH);  
-  delayMicroseconds(10);      
-  digitalWrite(trigger2,LOW); 
-  waktu2 = pulseIn(echo2,HIGH);
-  jarak2 = waktu2 * 0.034 / 2;
-  
-  // Serial.print ("Jarak = ");
-  // Serial.print (jarak2);     
-  // Serial.print (" cm");
-
-  // pengecekan konsisi air sumur
-  if(jarak2 >= 200){
-  	digitalWrite(ledKol1, HIGH);
-    digitalWrite(ledKol2, LOW);
-    digitalWrite(ledKol3, LOW);
-  } else if(jarak2 >= 80){
-   	digitalWrite(ledKol1, LOW);
-    digitalWrite(ledKol2, LOW);
-    digitalWrite(ledKol3, HIGH);
-  } else{
-   	digitalWrite(ledKol1, LOW);
-    digitalWrite(ledKol2, HIGH);
-    digitalWrite(ledKol3, LOW);
-  }
-
-
   Serial.write (10);            
-  delay (200);
+  delay(200);
 }
