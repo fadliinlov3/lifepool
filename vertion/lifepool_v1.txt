@@ -1,0 +1,89 @@
+//variabel untuk sensor
+const short trigger1=2; 
+const short echo1=3; 
+float waktu1, jarak1;
+
+const short trigger2=4; 
+const short echo2=5; 
+float waktu2, jarak2;
+
+//variabel untuk led
+const short ledSum1 = 6;
+const short ledSum2 = 7;
+const short ledKol1 = 8;
+const short ledKol2 = 10;
+const short ledKol3 = 9;
+
+
+void setup(){
+  Serial.begin(9600);
+
+  pinMode(trigger1,OUTPUT);
+  pinMode(echo1,INPUT);
+  pinMode(trigger2, OUTPUT);
+  pinMode(echo2,INPUT);
+
+  pinMode(ledSum1, OUTPUT);
+  pinMode(ledSum2, OUTPUT);
+  pinMode(ledKol1, OUTPUT);
+  pinMode(ledKol2, OUTPUT);
+  pinMode(ledKol3, OUTPUT);
+}
+
+void loop(){
+  // pengecekan kedalaman sumur
+  digitalWrite(trigger1,LOW);
+  delayMicroseconds(5);        
+  digitalWrite(trigger1,HIGH);  
+  delayMicroseconds(10);      
+  digitalWrite(trigger1,LOW); 
+  waktu1 = pulseIn(echo1,HIGH);
+  jarak1 = waktu1 * 0.034 / 2;
+  
+  // Serial.print ("Jarak = ");
+  // Serial.print (jarak1);     
+  // Serial.print (" cm");       
+  
+  // pengecekan konsisi air sumur
+  if(jarak1 >= 200){
+  	digitalWrite(ledSum1, HIGH);
+    digitalWrite(ledSum2, LOW);
+  } else{
+   	digitalWrite(ledSum1, LOW);
+    digitalWrite(ledSum2, HIGH);
+  }
+
+
+  // pengecekan kedalaman kolam
+  digitalWrite(trigger2,LOW);
+  delayMicroseconds(5);        
+  digitalWrite(trigger2,HIGH);  
+  delayMicroseconds(10);      
+  digitalWrite(trigger2,LOW); 
+  waktu2 = pulseIn(echo2,HIGH);
+  jarak2 = waktu2 * 0.034 / 2;
+  
+  Serial.print ("Jarak = ");
+  Serial.print (jarak2);     
+  Serial.print (" cm");
+
+  // pengecekan konsisi air sumur
+  if(jarak2 >= 200){
+  	digitalWrite(ledKol1, HIGH);
+    digitalWrite(ledKol2, LOW);
+    digitalWrite(ledKol3, LOW);
+  } else if(jarak2 >= 80){
+   	digitalWrite(ledKol1, LOW);
+    digitalWrite(ledKol2, LOW);
+    digitalWrite(ledKol3, HIGH);
+  } else{
+   	digitalWrite(ledKol1, LOW);
+    digitalWrite(ledKol2, HIGH);
+    digitalWrite(ledKol3, LOW);
+  }
+  
+
+  Serial.write (10);            
+  delay (200);      
+  
+}
